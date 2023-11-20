@@ -6,3 +6,4 @@ The project is written for the following api: http://85.192.34.140:8080/swagger-
 2. checkGetRequestsReturn200() - Checking all kinds of GET requests with the expected code 200.
 3. checkGetRequestsReturnNot200() - Checking all kinds of GET requests with any other code.
 4. checkFilesRequests() - Checking file interaction.
+In the last test, change the files path to the appropriate one
