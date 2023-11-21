@@ -1,4 +1,4 @@
-package dto.games;
+package ru.company.dto.games;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

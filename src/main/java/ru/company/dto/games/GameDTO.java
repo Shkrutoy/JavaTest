@@ -1,9 +1,8 @@
-package dto.games;
+package ru.company.dto.games;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
-import java.util.Date;
 
 public class GameDTO {
     @JsonProperty("company")
