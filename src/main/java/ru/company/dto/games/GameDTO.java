@@ -3,6 +3,7 @@ package ru.company.dto.games;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class GameDTO {
     @JsonProperty("company")
@@ -10,7 +11,7 @@ public class GameDTO {
     @JsonProperty("description")
     public String description;
     @JsonProperty("dlcs")
-    public ArrayList<DlsDTO> dlcs;
+    public List<DlsDTO> dlcs;
     @JsonProperty("gameId")
     public int gameId;
     @JsonProperty("genre")
@@ -28,13 +29,15 @@ public class GameDTO {
     @JsonProperty("requirements")
     public RequirementsDTO requirements;
     @JsonProperty("tags")
-    public ArrayList<String> tags;
+    public List<String> tags;
     @JsonProperty("title")
     public String title;
 
     public GameDTO(){}
 
-    public GameDTO(String company, String description, ArrayList<DlsDTO> dlcs, int gameId, String genre, boolean isFree, int price, String publish_date, int rating, boolean requiredAge, RequirementsDTO requirements, ArrayList<String> tags, String title) {
+    public GameDTO(String company, String description, List<DlsDTO> dlcs, int gameId, String genre, boolean isFree,
+                   int price, String publish_date, int rating, boolean requiredAge, RequirementsDTO requirements,
+                   List<String> tags, String title) {
         this.company = company;
         this.description = description;
         this.dlcs = dlcs;

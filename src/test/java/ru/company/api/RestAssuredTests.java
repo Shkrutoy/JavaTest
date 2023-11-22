@@ -5,6 +5,7 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import ru.company.dto.games.GameDTO;
 import ru.company.services.CheckCodeWithTokenService;
@@ -39,8 +40,10 @@ public class RestAssuredTests {
                 .body("{\"login\":\"" + login + "\", \"pass\":\"" + pass + "\"}")
                 .when()
                 .post("api/signup")
-                .then().log().body()
-                .statusCode(201)
+                .then()
+                .log()
+                .body()
+                .statusCode(HttpStatus.SC_CREATED)
                 .assertThat()
                 .body("register_data.login", equalTo(login))
                 .body("register_data.pass", equalTo(pass))
@@ -59,7 +62,7 @@ public class RestAssuredTests {
                 .when()
                 .post("api/user/games")
                 .then()
-                .statusCode(201);
+                .statusCode(HttpStatus.SC_CREATED);
 
         //просмотр списка игр
         Response response = RestAssured.given()
@@ -68,7 +71,7 @@ public class RestAssuredTests {
                 .when()
                 .get("api/user/games")
                 .then().log().body()
-                .statusCode(200)
+                .statusCode(HttpStatus.SC_OK)
                 .extract().response();
 
         games = response.jsonPath().getList(".", GameDTO.class);
@@ -83,17 +86,21 @@ public class RestAssuredTests {
                 .when()
                 .post("api/user/games")
                 .then()
-                .statusCode(201);
+                .statusCode(HttpStatus.SC_CREATED);
 
         //проверка счетчика
         response = RestAssured.given()
-                .auth().oauth2(token)
+                .auth()
+                .oauth2(token)
                 .contentType(ContentType.JSON)
                 .when()
                 .get("api/user/games")
-                .then().log().body()
-                .statusCode(200)
-                .extract().response();
+                .then()
+                .log()
+                .body()
+                .statusCode(HttpStatus.SC_OK)
+                .extract()
+                .response();
 
         games = response.jsonPath().getList(".", GameDTO.class);
 
@@ -109,7 +116,7 @@ public class RestAssuredTests {
                 .when()
                 .delete("api/user/games/" + games.get(0).gameId)
                 .then().log().body()
-                .statusCode(200)
+                .statusCode(HttpStatus.SC_OK)
                 .assertThat().body("info.status", equalTo("success"))
                 .assertThat().body("info.id", nullValue());
 
@@ -121,7 +128,7 @@ public class RestAssuredTests {
                 .when()
                 .put("api/user")
                 .then().log().body()
-                .statusCode(200)
+                .statusCode(HttpStatus.SC_OK)
                 .assertThat().body("info.status", equalTo("success"));
 
         //проверка смены пароля
@@ -134,7 +141,7 @@ public class RestAssuredTests {
                 .then()
                 .log()
                 .body()
-                .statusCode(200)
+                .statusCode(HttpStatus.SC_OK)
                 .assertThat()
                 .body("pass", equalTo("pass"));
 
@@ -144,7 +151,7 @@ public class RestAssuredTests {
                 .when()
                 .delete("api/user")
                 .then().log().body()
-                .statusCode(200)
+                .statusCode(HttpStatus.SC_OK)
                 .assertThat().body("info.status", equalTo("success"));
     }
 
@@ -188,7 +195,7 @@ public class RestAssuredTests {
                 .when()
                 .get("/api/files/download")
                 .then()
-                .statusCode(200)
+                .statusCode(HttpStatus.SC_OK)
                 .extract()
                 .response();
         String dFilePath = this.getClass().getClassLoader().getResource("dFile.jpeg").getFile();
