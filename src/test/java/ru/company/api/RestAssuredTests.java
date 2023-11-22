@@ -1,28 +1,36 @@
-package api;
+package ru.company.api;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import org.apache.commons.lang3.RandomUtils;
+import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
-import dto.games.GameDTO;
-import services.*;
+import ru.company.dto.games.GameDTO;
+import ru.company.services.CheckCodeWithTokenService;
+import ru.company.services.CheckCodeWithoutTokenService;
+import ru.company.services.FileSaveService;
+import ru.company.services.InitService;
+import ru.company.services.TokenService;
+
 import java.io.File;
 import java.util.List;
 
-import static org.hamcrest.Matchers.*;
-
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 public class RestAssuredTests {
+    private static final String URL = "http://85.192.34.140:8080/";
 
-    private final static String URL = "http://85.192.34.140:8080/";
-    private String token;
-    private final String login = "RTK-test20";
+    private final String login = "RTK-test" + RandomUtils.nextInt(1000, 50000);
     private final String pass = "PAROL";
+
+    private String token;
 
     //Тестирование активностей, связанных с пользователем
     @Test
     public void checkUserActivities() {
-
         RestAssured.baseURI = URL;
 
         //регистрация
@@ -33,11 +41,12 @@ public class RestAssuredTests {
                 .post("api/signup")
                 .then().log().body()
                 .statusCode(201)
-                .assertThat().body("register_data.login", equalTo(login))
-                             .body("register_data.pass", equalTo(pass))
-                             .body("register_data.pass", notNullValue());
+                .assertThat()
+                .body("register_data.login", equalTo(login))
+                .body("register_data.pass", equalTo(pass))
+                .body("register_data.pass", notNullValue());
 
-        token = TokenService.getJwtToken(login,pass);
+        token = TokenService.getJwtToken(login, pass);
 
         GameDTO gameDTO = InitService.gameDTOInit();
         List<GameDTO> games;
@@ -62,7 +71,7 @@ public class RestAssuredTests {
                 .statusCode(200)
                 .extract().response();
 
-        games = response.jsonPath().getList(".",GameDTO.class);
+        games = response.jsonPath().getList(".", GameDTO.class);
 
         int gamesCount = games.size();
 
@@ -98,7 +107,7 @@ public class RestAssuredTests {
                 .auth().oauth2(token)
                 .contentType(ContentType.JSON)
                 .when()
-                .delete("api/user/games/"+games.get(0).gameId)
+                .delete("api/user/games/" + games.get(0).gameId)
                 .then().log().body()
                 .statusCode(200)
                 .assertThat().body("info.status", equalTo("success"))
@@ -118,12 +127,16 @@ public class RestAssuredTests {
         //проверка смены пароля
         RestAssured.given()
                 .contentType(ContentType.JSON)
-                .auth().oauth2(token)
+                .auth()
+                .oauth2(token)
                 .when()
                 .get("api/user")
-                .then().log().body()
+                .then()
+                .log()
+                .body()
                 .statusCode(200)
-                .assertThat().body("pass", equalTo("pass"));
+                .assertThat()
+                .body("pass", equalTo("pass"));
 
         //удаление пользователя
         RestAssured.given()
@@ -137,39 +150,36 @@ public class RestAssuredTests {
 
     //Тестирование GET запросов на возвращение кода 200
     @Test
-    public void checkGetRequestsReturn200(){
-
+    public void checkGetRequestsReturn200() {
         RestAssured.baseURI = URL;
 
-        CheckCodeWithoutTokenService.statusCodeRequest("api/users",200,true);
-        CheckCodeWithoutTokenService.statusCodeRequest("api/easy/carBrands",200,true);
-        CheckCodeWithoutTokenService.statusCodeRequest("api/easy/nums",200,true);
-        CheckCodeWithoutTokenService.statusCodeRequest("api/easy/redirect",200,true);
-        CheckCodeWithoutTokenService.statusCodeRequest("api/easy/version",200,true);
-        CheckCodeWithoutTokenService.statusCodeRequest("api/files/download",200,true);
-        CheckCodeWithoutTokenService.statusCodeRequest("api/files/downloadLastUploaded",200,true);
+        CheckCodeWithoutTokenService.statusCodeRequest("api/users", HttpStatus.SC_OK, true);
+        CheckCodeWithoutTokenService.statusCodeRequest("api/easy/carBrands", 200, true);
+        CheckCodeWithoutTokenService.statusCodeRequest("api/easy/nums", 200, true);
+        CheckCodeWithoutTokenService.statusCodeRequest("api/easy/redirect", 200, true);
+        CheckCodeWithoutTokenService.statusCodeRequest("api/easy/version", 200, true);
+        CheckCodeWithoutTokenService.statusCodeRequest("api/files/download", 200, true);
+        CheckCodeWithoutTokenService.statusCodeRequest("api/files/downloadLastUploaded", 200, true);
     }
 
     //Тестирование GET запросов на возвращение любуго другого кода
     @Test
-    public void checkGetRequestsReturnNot200(){
-
+    public void checkGetRequestsReturnNot200() {
         RestAssured.baseURI = URL;
         token = TokenService.getJwtToken("admin", "admin");
 
-        CheckCodeWithoutTokenService.statusCodeRequest("api/bad-request",400,true);
-        CheckCodeWithoutTokenService.statusCodeRequest("api/created",201,true);
-        CheckCodeWithoutTokenService.statusCodeRequest("api/forbidden",403,true);
-        CheckCodeWithTokenService.statusCodeRequest("api/invalid-uri",404,token);
-        CheckCodeWithoutTokenService.statusCodeRequest("api/moved",301,false);
-        CheckCodeWithoutTokenService.statusCodeRequest("api/no-content",204,true);
-        CheckCodeWithoutTokenService.statusCodeRequest("api/unauthorized",401,true);
+        CheckCodeWithoutTokenService.statusCodeRequest("api/bad-request", HttpStatus.SC_BAD_REQUEST, true);
+        CheckCodeWithoutTokenService.statusCodeRequest("api/created", HttpStatus.SC_CREATED, true);
+        CheckCodeWithoutTokenService.statusCodeRequest("api/forbidden", HttpStatus.SC_FORBIDDEN, true);
+        CheckCodeWithTokenService.statusCodeRequest("api/invalid-uri", HttpStatus.SC_NOT_FOUND, token);
+        CheckCodeWithoutTokenService.statusCodeRequest("api/moved", HttpStatus.SC_MOVED_PERMANENTLY, false);
+        CheckCodeWithoutTokenService.statusCodeRequest("api/no-content", HttpStatus.SC_NO_CONTENT, true);
+        CheckCodeWithoutTokenService.statusCodeRequest("api/unauthorized", HttpStatus.SC_UNAUTHORIZED, true);
     }
 
     //Тестирование взаимодействия с файлами
     @Test
     public void checkFilesRequests() {
-
         RestAssured.baseURI = URL;
 
         //скачивание файла
@@ -179,9 +189,10 @@ public class RestAssuredTests {
                 .get("/api/files/download")
                 .then()
                 .statusCode(200)
-                .extract().response();
-
-        FileSaveService.saveFile(response, "C:/Users/slaye/MyBusiness/dfile.JPEG");
+                .extract()
+                .response();
+        String dFilePath = this.getClass().getClassLoader().getResource("dFile.jpeg").getFile();
+        FileSaveService.saveFile(response, dFilePath);
 
         //скачивание последнего загруженного файла
         response = RestAssured.given()
@@ -189,20 +200,26 @@ public class RestAssuredTests {
                 .when()
                 .get("/api/files/downloadLastUploaded")
                 .then()
-                .statusCode(200)
-                .extract().response();
+                .statusCode(HttpStatus.SC_OK)
+                .extract()
+                .response();
 
-        FileSaveService.saveFile(response, "C:/Users/slaye/MyBusiness/dLastfile.JPEG");
+        String dLastFilePath = this.getClass().getClassLoader().getResource("dLastFile.jpeg").getFile();
+        FileSaveService.saveFile(response, dLastFilePath);
 
         //загрузка файла на сервер
-        File fileToUpload = new File("C:/Users/slaye/MyBusiness/BYBICK.JPEG");
+        String bybickFilePath = this.getClass().getClassLoader().getResource("bybick.jpeg").getFile();
+        File fileToUpload = new File(bybickFilePath);
 
         RestAssured.given()
                 .multiPart(fileToUpload)
                 .when()
                 .post("/api/files/upload")
-                .then().log().body()
-                .statusCode(200)
-                .assertThat().body("info.status", equalTo("success"));
+                .then()
+                .log()
+                .body()
+                .statusCode(HttpStatus.SC_OK)
+                .assertThat()
+                .body("info.status", equalTo("success"));
     }
 }

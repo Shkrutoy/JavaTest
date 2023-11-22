@@ -1,17 +1,15 @@
-package services;
+package ru.company.services;
 
-import dto.LoginDTO;
-import dto.TokenDTO;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
-
-import static io.restassured.RestAssured.given;
+import ru.company.dto.LoginDTO;
+import ru.company.dto.TokenDTO;
 
 public class TokenService {
     public static String getJwtToken(String login, String password ){
         LoginDTO loginDTO = new LoginDTO(login,password);
-        RestAssured.baseURI = "http://85.192.34.140:8080";
+        RestAssured.baseURI = "http://85.192.34.140:8080/";
         Response response = RestAssured.given()
                 .contentType(ContentType.JSON)
                 .body(loginDTO)

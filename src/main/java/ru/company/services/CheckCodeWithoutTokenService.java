@@ -1,4 +1,4 @@
-package services;
+package ru.company.services;
 
 import io.restassured.RestAssured;
 

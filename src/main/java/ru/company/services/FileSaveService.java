@@ -1,4 +1,4 @@
-package services;
+package ru.company.services;
 
 import io.restassured.response.Response;
 
@@ -8,14 +8,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class FileSaveService {
-
-    public static File saveFile(Response response, String filePath) {
-
-        try {
-            InputStream inputStream = response.asInputStream();
-
+    public static void saveFile(Response response, String filePath) {
+        try (InputStream inputStream = response.asInputStream()) {
             File file = new File(filePath);
-
             try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
                 byte[] buffer = new byte[1024];
                 int bytesRead;
@@ -23,11 +18,8 @@ public class FileSaveService {
                     fileOutputStream.write(buffer, 0, bytesRead);
                 }
             }
-
-            return file;
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
         }
     }
 }
